@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application creationComplete="questions.send()" xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" height="300" width="200" horizontalScrollPolicy="off" viewSourceURL="srcview/index.html" backgroundAlpha="0" verticalScrollPolicy="off" maxHeight="400" maxWidth="200">
+		
+	<mx:HTTPService id="questions" url="http://tanga.com/questions/current" result="question_handler(event)" />
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.ObjectProxy;
+			import mx.rpc.events.ResultEvent;
+			import mx.collections.ArrayCollection;
+			import mx.controls.*;
+			
+			[Bindable]
+			public var question:String;
+			
+			[Bindable]
+			public var answers:ArrayCollection;
+			
+			private var question_id:int;
+			
+			public function question_handler(evt:ResultEvent):void
+			{
+				question_id = evt.result.question.id;
+				question = evt.result.question.body;
+				answers = evt.result.question.answers.answer;
+			}
+			
+			public function question_answered(evt:Event):void
+			{
+				var answer:Object = evt.target.getRepeaterItem();
+				Alert.show("You clicked " + answer.body);
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Label text="Tanga Random Questions" color="#D6D430" fontSize="12"/>
+	<mx:TextArea text="{question}" color="#18C5EA" editable="false" textAlign="center" backgroundAlpha="0" borderThickness="0"/>
+	<mx:VBox height="100%">
+	
+	 	<mx:Repeater id="question_repeater" dataProvider="{answers}">
+	 		<mx:Button label="{question_repeater.currentItem.body}" click="question_answered(event)" color="#11EF64" alpha="0.1" textRollOverColor="#ECD50F"/>
+	 		
+	 	</mx:Repeater>
+	 	 
+	</mx:VBox>
+	
+</mx:Application>
