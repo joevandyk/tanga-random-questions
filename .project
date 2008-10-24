@@ -26,5 +26,10 @@
 			<type>2</type>
 			<location>/Volumes/projects/fixieconsulting.com/content/flex</location>
 		</link>
+		<link>
+			<name>bin-release</name>
+			<type>2</type>
+			<location>/Volumes/projects/fixieconsulting.com/content/flex</location>
+		</link>
 	</linkedResources>
 </projectDescription>
