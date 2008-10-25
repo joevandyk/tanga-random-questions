@@ -54,13 +54,22 @@
 		]]>
 	</mx:Script>
 		
-	<mx:Label text="Tanga Random Questions" color="#D6D430" fontSize="12"/>
-	<mx:Label id="author" text="{question.author_name} asks..." color="#D6D430" />
-	<mx:TextArea text="{question.body}" color="#18C5EA" editable="false" textAlign="center" backgroundAlpha="0" borderThickness="0"  id="textarea1"/>
+	<mx:Style>
+		TextArea { border-thickness: 0; background-alpha: 0; color: #ffffff; }
+		global { text-align: center; color: #abcdff }
+		.important { fontSize: 12; }
+		.wacky { color: #ddaaff; }		
+		.small { font-size: 8; }
+		Button { font-size: 8; }
+	</mx:Style>
+	
+	<mx:Label text="Tanga Random Questions" styleName="important" />
+	<mx:Label id="author" text="{question.author_name} asks..." />
+	<mx:TextArea text="{question.body}" editable="false" id="textarea1"/>
 	
 	<mx:VBox height="100%" borderSides="10" id="vbox1">
 	 	<mx:Repeater id="question_repeater" dataProvider="{answers}">
-	 		<mx:Button label="{question_repeater.currentItem.body}" click="question_answered_callback(event)" color="#11EF64" alpha="0.1" textRollOverColor="#ECD50F" fontSize="8"/>
+	 		<mx:Button label="{question_repeater.currentItem.body}" click="question_answered_callback(event)" />
 	 	</mx:Repeater>
 	</mx:VBox>
 	
@@ -68,17 +77,17 @@
 		<mx:State name="answered">
 			<mx:RemoveChild target="{vbox1}"/>
 			<mx:AddChild position="lastChild">
-				<mx:Label textAlign="center" text="{your_answer.body}." color="#C000FF" />
+				<mx:Label  styleName="wacky" text="{your_answer.body}." />
 			</mx:AddChild>
 			<mx:AddChild position="lastChild">
-				<mx:VBox height="100%"  id="vbox2" fontSize="8" textAlign="center">
+				<mx:VBox height="100%"  id="vbox2">
 	 				<mx:Repeater id="answer_repeater" dataProvider="{answers}">
-	 					<mx:Label truncateToFit="true" text="{Math.round(answer_repeater.currentItem.times_answered / question.times_answered * 100)}% {answer_repeater.currentItem.body}" color="#abcdff"/>
+	 					<mx:Label styleName="small" truncateToFit="true" text="{Math.round(answer_repeater.currentItem.times_answered / question.times_answered * 100)}% {answer_repeater.currentItem.body}" />
 	 				</mx:Repeater>
 				</mx:VBox>
 			</mx:AddChild>
 			<mx:AddChild relativeTo="{vbox2}" position="before">
-				<mx:Label text="{question.times_answered} answers so far" color="#D6D430" fontSize="8"/>
+				<mx:Label text="{question.times_answered} answers so far" />
 			</mx:AddChild>
 		</mx:State>
 	</mx:states>
