@@ -1,5 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Application creationComplete="questions.send()" xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" height="320" width="200" horizontalScrollPolicy="off" backgroundAlpha="0" verticalScrollPolicy="off" maxWidth="200" maxHeight="350" paddingBottom="4" paddingLeft="10" paddingRight="10" paddingTop="4" backgroundColor="#000000">
+<mx:Application creationComplete="load_question_data()" xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" height="320" width="200" horizontalScrollPolicy="off" backgroundAlpha="0" verticalScrollPolicy="off" maxWidth="200" maxHeight="350" paddingBottom="4" paddingLeft="10" paddingRight="10" paddingTop="4" backgroundColor="#000000">
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.ObjectProxy;
+			import mx.rpc.events.ResultEvent;
+			import mx.collections.ArrayCollection;
+			import mx.rpc.http.HTTPService;
+		
+			[Bindable]
+			// Holds the currently asked question.
+			public var question:Object;
+			
+			[Bindable]
+			// Holds the possible answers for the question.
+			public var answers:ArrayCollection;
+			
+			[Bindable]
+			// Holds the answer you selected.
+			public var your_answer:Object;
+			
+			// Remembers the question and the possible answers (this callback is called after the questions service completes)
+			public function load_question_callback(evt:ResultEvent):void
+			{
+				question = evt.result.question;
+				answers = evt.result.question.answers.answer;
+			}
+			
+			// Called when you answer a question.
+			public function question_answered_callback(evt:Event):void
+			{
+				your_answer = evt.target.getRepeaterItem();
+				post_answer(your_answer);
+				load_question_data();
+				currentState = "answered";
+			}
+			
+			public function post_answer(answer:Object):void
+			{
+				var answer_service:HTTPService = new HTTPService();
+				answer_service.url = "http://tanga.com/random/questions/" + question.id + "/question_answers?answer=" + answer.id;
+				answer_service.request = { _method: "POST" };  // Why do I have to do this?
+				answer_service.method = "POST";                // This doesn't seem to submit a POST, just a GET.
+				answer_service.send();
+			}
+			
+			public function load_question_data():void
+			{
+				var question_service:HTTPService = new HTTPService();
+				question_service.url = "http://tanga.com/questions/current";
+				question_service.addEventListener("result", load_question_callback);
+				question_service.send();
+			}
+		]]>
+	</mx:Script>
+		
+	<mx:Label text="Tanga Random Questions" color="#D6D430" fontSize="12"/>
+	<mx:Label id="author" text="{question.author_name} asks..." color="#D6D430" />
+	<mx:TextArea text="{question.body}" color="#18C5EA" editable="false" textAlign="center" backgroundAlpha="0" borderThickness="0"  id="textarea1"/>
+	
+	<mx:VBox height="100%" borderSides="10" id="vbox1">
+	 	<mx:Repeater id="question_repeater" dataProvider="{answers}">
+	 		<mx:Button label="{question_repeater.currentItem.body}" click="question_answered_callback(event)" color="#11EF64" alpha="0.1" textRollOverColor="#ECD50F" fontSize="8"/>
+	 	</mx:Repeater>
+	</mx:VBox>
+	
 	<mx:states>
 		<mx:State name="answered">
 			<mx:RemoveChild target="{vbox1}"/>
@@ -9,78 +73,14 @@
 			<mx:AddChild position="lastChild">
 				<mx:VBox height="100%"  id="vbox2" fontSize="8" textAlign="center">
 	 				<mx:Repeater id="answer_repeater" dataProvider="{answers}">
-	 					<mx:Label truncateToFit="true" text="{Math.round(answer_repeater.currentItem.times_answered / times_answered * 100)}% {answer_repeater.currentItem.body}" color="#abcdff"/>
+	 					<mx:Label truncateToFit="true" text="{Math.round(answer_repeater.currentItem.times_answered / question.times_answered * 100)}% {answer_repeater.currentItem.body}" color="#abcdff"/>
 	 				</mx:Repeater>
 				</mx:VBox>
 			</mx:AddChild>
 			<mx:AddChild relativeTo="{vbox2}" position="before">
-				<mx:Label text="{times_answered} answers so far" color="#D6D430" fontSize="8"/>
+				<mx:Label text="{question.times_answered} answers so far" color="#D6D430" fontSize="8"/>
 			</mx:AddChild>
 		</mx:State>
 	</mx:states>
-		
-	<mx:HTTPService id="questions" url="http://tanga.com/questions/current" result="question_handler(event)" />
-	
-	<mx:Script>
-		<![CDATA[
-			import mx.utils.ObjectProxy;
-			import mx.rpc.events.ResultEvent;
-			import mx.collections.ArrayCollection;
-			
-			[Bindable]
-			public var question:String;
-			
-			[Bindable]
-			public var times_answered:int;
-			
-			[Bindable]
-			public var answers:ArrayCollection;
-			
-			[Bindable]
-			public var your_answer:Object;
-			
-			[Bindable]
-			public var author_name:String;
-			
-			[Bindable]
-			public var author_profile:String;
-			
-			private var question_id:int;
-			
-			public function question_handler(evt:ResultEvent):void
-			{
-				question_id = evt.result.question.id;
-				times_answered = evt.result.question.times_answered;
-				question = evt.result.question.body;
-				answers = evt.result.question.answers.answer;
-				author_name = evt.result.question.author_name;
-    			author_profile = evt.result.question.author_profile;
-			}
-			
-			public function question_answered(evt:Event):void
-			{
-				your_answer = evt.target.getRepeaterItem();
-				var service:HTTPService = new HTTPService();
-				service.url = "http://tanga.com/random/questions/" + question_id + "/question_answers?answer=" + your_answer.id;
-				trace(service.url);
-				service.request = { _method: "POST" };  // Why do I have to do this?
-				service.method = "POST";                // This doesn't seem to submit a POST, just a GET.
-				service.send();
-				questions.send();
-				currentState = "answered";
-				
-			}
-		]]>
-	</mx:Script>
-	
-	<mx:Label text="Tanga Random Questions" color="#D6D430" fontSize="12"/>
-	<mx:Label id="author" htmlText="&lt;a href='{author_profile}'&gt;{author_name}&lt;/a&gt; asks..." color="#D6D430" />
-	<mx:TextArea text="{question}" color="#18C5EA" editable="false" textAlign="center" backgroundAlpha="0" borderThickness="0"  id="textarea1"/>
-	
-	<mx:VBox height="100%" borderSides="10" id="vbox1">
-	 	<mx:Repeater id="question_repeater" dataProvider="{answers}">
-	 		<mx:Button label="{question_repeater.currentItem.body}" click="question_answered(event)" color="#11EF64" alpha="0.1" textRollOverColor="#ECD50F" fontSize="8"/>
-	 	</mx:Repeater>
-	</mx:VBox>
 	
 </mx:Application>
